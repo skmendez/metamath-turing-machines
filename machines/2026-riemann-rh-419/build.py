@@ -1,42 +1,39 @@
 #!/usr/bin/env python3
-"""Build the 476-state RH Turing machine from the optimized NQL source."""
+"""Build the experimental 419-state RH Turing machine."""
 from pathlib import Path
 import contextlib
+import hashlib
 import sys
 
 ROOT = Path(__file__).resolve().parent
 COMPDIR = ROOT / "compiler"
 sys.path.insert(0, str(COMPDIR))
 
-import nqlgrammar
-import nqlast
 import framework
+import nqlast
+import nqlgrammar
 from framework import Machine
 
-SOURCE = ROOT / "riemann-rh-476.nql"
-OUTPUT = ROOT / "riemann-rh-476.tm"
+SOURCE = ROOT / "riemann-rh-419.nql"
+OUTPUT = ROOT / "riemann-rh-419.tm"
 
-# These no-ops change only instruction addresses.  They were selected by a
-# greedy search to maximize sharing in the compiler's BDD dispatcher.
+# One-instruction semantic no-ops inserted before raw main-IR positions.
+# They alter only program-counter addresses and BDD sharing.
 LAYOUT_NOPS = {
-    16: 1,
-    276: 1,
-    280: 1,
-    301: 1,
-    335: 1,
-    358: 1,
-    365: 1,
-    382: 1,
-    402: 1,
-    406: 1,
-    426: 1,
+    22: 1,
+    23: 1,
+    56: 1,
+    99: 1,
+    102: 1,
+    189: 1,
 }
-REGISTER_ORDER = ("lcm", "l", "denom", "i", "x", "c")
+REGISTER_ORDER = ("denom", "lcm", "x", "i", "l", "c")
 PC_BITS = 10
+EXPECTED_STATES = 419
 
 
 def build() -> Machine:
-    ast, = nqlgrammar.grammar.parseFile(str(SOURCE), parseAll=True)
+    ast, = nqlgrammar.grammar.parse_file(str(SOURCE), parse_all=True)
     framework.MAIN_INSERT_NOPS = dict(LAYOUT_NOPS)
     builder = nqlast.AstMachine(ast)
     builder.pc_bits = PC_BITS
@@ -50,11 +47,13 @@ def build() -> Machine:
 def main() -> None:
     machine = build()
     states = len(machine.reachable())
-    if states != 476:
-        raise RuntimeError(f"expected 476 reachable states, got {states}")
+    if states != EXPECTED_STATES:
+        raise RuntimeError(f"expected {EXPECTED_STATES} reachable states, got {states}")
     with OUTPUT.open("w", encoding="utf-8") as out, contextlib.redirect_stdout(out):
         machine.print_machine()
+    digest = hashlib.sha256(OUTPUT.read_bytes()).hexdigest()
     print(f"wrote {OUTPUT} ({states} states)")
+    print(f"sha256 {digest}")
 
 
 if __name__ == "__main__":
