@@ -1,0 +1,102 @@
+/* A 370-state machine that halts iff the Riemann hypothesis is false.
+
+   Tests, for every n >= 1, the Matiyasevich criterion
+       max(H_lcm(1..n) - n, 0)^2 <= n * H_n^4
+   with H the harmonic numbers; see PROOF.md for the equivalence to RH
+   (using conditions (10) and (11) of Matiyasevich, CDMTCS-527, 2018) and
+   for why, unlike the 2016 744-state machine, no n > 253 guard is needed.
+
+   Register roles per outer iteration (D = lcm(1..x)!):
+     x    - the candidate integer n
+     lcm  - lcm(1..x), updated by scanning multiples of the previous value
+     j, k - countdowns of lcm and x (provably zero at their reload points)
+     l    - D * H_lcm numerator; the halt builtin zeroes it when not halting
+     denom- running factorial, D after the loop
+     c    - scan step, then D * H_x via the shared-denominator recurrence
+
+   The layout declarations insert one-slot no-ops that only shift program
+   counter assignments to improve BDD sharing; they were found by search
+   (misc/layoutopt.py) and are verified decrement-safe by the compiler. */
+
+option opt_destructive;
+option opt_remainder_test;
+option opt_dec_fusion;
+option opt_copy_save;
+option opt_canonical_temps;
+
+layout 16 1;
+layout 17 2;
+layout 22 1;
+layout 25 1;
+layout 26 4;
+layout 30 1;
+layout 31 1;
+layout 35 2;
+layout 40 1;
+layout 41 1;
+layout 45 1;
+layout 46 1;
+layout 47 1;
+layout 48 1;
+layout 49 1;
+layout 50 1;
+layout 51 1;
+layout 52 1;
+layout 63 1;
+layout 65 1;
+layout 69 1;
+layout 73 1;
+layout 76 1;
+layout 77 1;
+layout 80 1;
+layout 82 1;
+layout 90 1;
+layout 94 1;
+layout 97 1;
+layout 98 1;
+layout 101 1;
+layout 103 1;
+layout 106 1;
+layout 107 2;
+layout 114 1;
+layout 122 1;
+layout 126 1;
+layout 129 1;
+layout 130 1;
+layout 131 1;
+layout 139 1;
+layout 141 1;
+layout 143 1;
+layout 146 1;
+layout 147 1;
+layout 148 1;
+layout 156 1;
+layout 164 3;
+
+global x; global lcm; global l; global denom; global i; global c; global j; global k;
+proc main() {
+  lcm = 1;
+  while (true) {
+    x = x + 1;
+    c = lcm;
+    while (lcm != (lcm / x) * x) { lcm = lcm + c; }
+    i = 1; denom = 1;
+    j = j + lcm;
+    k = k + x;
+    while (j > 0) {
+      j = j - 1;
+      c = c * i;
+      l = l * i + denom;
+      if (k > 0) { k = k - 1; c = l; }
+      denom = denom * i;
+      i = i + 1;
+    }
+    l = l - denom * x;
+    c = c * c;
+    l = l * denom;
+    c = c * c;
+    c = c * x;
+    l = l * l;
+    builtin_halt_if_gt_destroy(l, c);
+  }
+}

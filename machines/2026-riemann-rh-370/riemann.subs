@@ -1,0 +1,653 @@
+
+NAME: main() ORDER: 9
+    000000000 -> reg_init
+    000000001 -> reg_init
+    000000010 -> reg_init
+    000000011 -> reg_init
+    000000100 -> reg_init
+    000000101 -> reg_init
+    000000110 -> reg_init
+    000000111 -> reg_init
+    000001000 -> reg_init
+    000001001 -> reg_init
+    000001010 -> reg_init
+    000001011 -> reg_init
+    000001100 -> reg_init
+    000001101 -> reg_init
+    000001110 -> reg_init
+    000001111 -> reg_init
+    000010000 -> noop.0
+    000010001 -> noop.0
+    00001001  -> noop.1
+    0000101   -> transfer(_Glcm)
+    000011000 -> noop.0
+    000011001 -> noop.0
+    000011010 -> reg_incr(_Glcm)
+    000011011 -> reg_incr(_Gx) #gen2
+    0000111   -> transfer(_Gc)
+    000100    -> transfer(_Glcm,_Gc,_copysave)
+    000101000 -> noop.0
+    000101001 -> noop.0
+    00010101  -> noop.1
+    0001011   -> transfer(_copysave,_Glcm)
+    000110    -> transfer(_Glcm,_copysave,_scratch_2) #gen4
+    000111000 -> noop.0
+    000111001 -> noop.0
+    00011101  -> noop.1
+    0001111   -> transfer(_copysave,_Glcm)
+    001000000 -> noop.0
+    001000001 -> noop.0
+    001000010 -> noop.0
+    001000011 -> noop.0
+    001000100 -> reg_decr(_scratch_2) #gen5
+    001000101 -> main().jump(55,5) -> gen3
+    001000110 -> reg_incr(_scratch_2)
+    001000111 -> noop.0
+    001001    -> transfer(_Gx,_copysave,_scratch_1)
+    001010000 -> noop.0
+    001010001 -> noop.0
+    00101001  -> noop.1
+    0010101   -> transfer(_copysave,_Gx)
+    001011000 -> reg_decr(_scratch_1) #gen6
+    001011001 -> main().jump(4,5) -> gen5
+    001011010 -> noop.0
+    001011011 -> noop.0
+    001011100 -> reg_decr(_scratch_2)
+    001011101 -> main().jump(5,2) -> gen8
+    001011110 -> main().jump(0,3) -> gen6
+    001011111 -> main().jump(55,5) -> gen3 #gen7
+    001100000 -> noop.0
+    001100001 -> noop.0 #gen8
+    00110001  -> noop.1
+    0011001   -> transfer(_scratch_1)
+    001101    -> transfer(_Gc,_Glcm,_copysave) #gen9
+    0011100   -> transfer(_copysave,_Gc)
+    001110100 -> noop.0
+    001110101 -> main().jump(48,7) -> gen4
+    001110110 -> noop.0
+    001110111 -> noop.0 #gen3
+    0011110   -> transfer(_Gi)
+    001111100 -> noop.0
+    001111101 -> reg_incr(_Gi)
+    001111110 -> noop.0
+    001111111 -> noop.0
+    0100000   -> transfer(_Gdenom)
+    010000100 -> noop.0
+    010000101 -> reg_incr(_Gdenom)
+    010000110 -> noop.0
+    010000111 -> noop.0
+    010001    -> transfer(_Glcm,_Gj,_copysave)
+    010010000 -> noop.0
+    010010001 -> noop.0
+    01001001  -> noop.1
+    0100101   -> transfer(_copysave,_Glcm)
+    010011    -> transfer(_Gx,_Gk,_copysave)
+    0101000   -> transfer(_copysave,_Gx)
+    010100100 -> reg_decr(_Gj) #gen11
+    010100101 -> main().jump(151,7) -> gen10
+    010100110 -> reg_incr(_Gj)
+    010100111 -> reg_decr(_Gj) #gen12
+    010101000 -> noop.0
+    010101001 -> noop.0 #gen13
+    010101010 -> reg_decr(_Gc)
+    010101011 -> main().jump(29,4) -> gen14
+    010101100 -> noop.0
+    010101101 -> noop.0
+    01010111  -> noop.1
+    010110    -> transfer(_Gi,_copysave,_scratch_1)
+    0101110   -> transfer(_copysave,_Gi)
+    010111100 -> main().jump(9,5) -> gen13
+    010111101 -> noop.0 #gen14
+    01011111  -> noop.1
+    0110000   -> transfer(_scratch_1,_Gc)
+    011000100 -> reg_decr(_Gl) #gen15
+    011000101 -> main().jump(22,4) -> gen16
+    011000110 -> noop.0
+    011000111 -> noop.0
+    011001    -> transfer(_Gi,_copysave,_scratch_1)
+    0110100   -> transfer(_copysave,_Gi)
+    011010100 -> main().jump(4,5) -> gen15
+    011010101 -> noop.0
+    011010110 -> noop.0 #gen16
+    011010111 -> noop.0
+    011011    -> transfer(_Gdenom,_copysave,_scratch_1)
+    0111000   -> transfer(_copysave,_Gdenom)
+    0111001   -> transfer(_scratch_1,_Gl)
+    011101000 -> noop.0
+    011101001 -> reg_decr(_Gk)
+    011101010 -> main().jump(252,9) -> gen17
+    011101011 -> noop.0
+    0111011   -> transfer(_Gc)
+    011110    -> transfer(_Gl,_Gc,_copysave)
+    0111110   -> transfer(_copysave,_Gl)
+    011111100 -> reg_decr(_Gdenom) #gen17 #gen18 #gen19
+    011111101 -> main().jump(29,4) -> gen20
+    011111110 -> noop.0
+    011111111 -> noop.0
+    100000    -> transfer(_Gi,_copysave,_scratch_1)
+    1000010   -> transfer(_copysave,_Gi)
+    100001100 -> main().jump(252,9) -> gen19
+    100001101 -> noop.0 #gen20
+    10000111  -> noop.1
+    1000100   -> transfer(_scratch_1,_Gdenom)
+    100010100 -> reg_incr(_Gi)
+    100010101 -> main().jump(164,9) -> gen11
+    100010110 -> noop.0
+    100010111 -> noop.0 #gen10
+    100011    -> transfer(_Gdenom,_copysave,_scratch_2)
+    1001000   -> transfer(_copysave,_Gdenom)
+    100100100 -> noop.0 #gen21
+    100100101 -> reg_decr(_scratch_2)
+    100100110 -> main().jump(22,4) -> gen22
+    100100111 -> noop.0
+    100101    -> transfer(_Gx,_copysave,_scratch_1)
+    1001100   -> transfer(_copysave,_Gx)
+    100110100 -> main().jump(4,5) -> gen21
+    100110101 -> noop.0
+    100110110 -> noop.0 #gen22
+    100110111 -> noop.0
+    100111000 -> reg_decr(_scratch_1) #gen23
+    100111001 -> main().jump(5,2) -> gen24
+    100111010 -> reg_decr(_Gl)
+    100111011 -> noop.0
+    100111100 -> main().jump(0,3) -> gen23
+    100111101 -> noop.0 #gen24
+    10011111  -> noop.1
+    101000    -> transfer(_Gc,_scratch_1,_scratch_2)
+    101001000 -> reg_decr(_scratch_1) #gen25
+    101001001 -> main().jump(29,4) -> gen26
+    10100101  -> noop.1
+    1010011   -> noop.2
+    101010    -> transfer(_scratch_2,_Gc,_copysave)
+    1010110   -> transfer(_copysave,_scratch_2)
+    101011100 -> main().jump(8,5) -> gen25
+    101011101 -> noop.0 #gen26
+    10101111  -> noop.1
+    1011000   -> transfer(_scratch_2)
+    101100100 -> reg_decr(_Gl) #gen27
+    101100101 -> main().jump(22,4) -> gen28
+    101100110 -> noop.0
+    101100111 -> noop.0
+    101101    -> transfer(_Gdenom,_copysave,_scratch_1)
+    1011100   -> transfer(_copysave,_Gdenom)
+    101110100 -> main().jump(4,5) -> gen27
+    101110101 -> noop.0
+    101110110 -> noop.0 #gen28
+    101110111 -> noop.0
+    1011110   -> transfer(_scratch_1,_Gl)
+    101111100 -> noop.0
+    101111101 -> noop.0
+    10111111  -> noop.1
+    110000    -> transfer(_Gc,_scratch_1,_scratch_2)
+    110001000 -> reg_decr(_scratch_1) #gen29
+    110001001 -> main().jump(29,4) -> gen30
+    11000101  -> noop.1
+    1100011   -> noop.2
+    110010    -> transfer(_scratch_2,_Gc,_copysave)
+    1100110   -> transfer(_copysave,_scratch_2)
+    110011100 -> main().jump(8,5) -> gen29
+    110011101 -> noop.0 #gen30
+    11001111  -> noop.1
+    1101000   -> transfer(_scratch_2)
+    110100100 -> noop.0 #gen31
+    110100101 -> reg_decr(_Gc)
+    110100110 -> main().jump(22,4) -> gen32
+    110100111 -> noop.0
+    110101    -> transfer(_Gx,_copysave,_scratch_1)
+    1101100   -> transfer(_copysave,_Gx)
+    110110100 -> main().jump(4,5) -> gen31
+    110110101 -> noop.0
+    110110110 -> noop.0 #gen32
+    110110111 -> noop.0
+    1101110   -> transfer(_scratch_1,_Gc)
+    110111100 -> noop.0
+    110111101 -> noop.0
+    11011111  -> noop.1
+    111000    -> transfer(_Gl,_scratch_1,_scratch_2)
+    111001000 -> reg_decr(_scratch_1) #gen33
+    111001001 -> main().jump(29,4) -> gen34
+    11100101  -> noop.1
+    1110011   -> noop.2
+    111010    -> transfer(_scratch_2,_Gl,_copysave)
+    1110110   -> transfer(_copysave,_scratch_2)
+    111011100 -> main().jump(8,5) -> gen33
+    111011101 -> noop.0 #gen34
+    11101111  -> noop.1
+    1111000   -> transfer(_scratch_2)
+    111100100 -> reg_decr(_Gc) #gen35
+    111100101 -> main().jump(5,2) -> gen36
+    111100110 -> reg_decr(_Gl)
+    111100111 -> main().jump(27,9) -> gen2
+    111101000 -> main().jump(4,5) -> gen35
+    111101001 -> noop.0 #gen36
+    111101010 -> noop.0
+    111101011 -> noop.0
+    111101100 -> reg_decr(_Gl)
+    111101101 -> main().jump(27,9) -> gen2
+    111101110 -> halt
+    111101111 -> main().jump(27,9) -> gen2 #gen37
+    11111     -> noop.4 #gen1
+
+NAME: noop.4 ORDER: 4
+
+NAME: main().jump(27,9) ORDER: 0
+
+NAME: halt ORDER: 0
+
+NAME: reg_decr(_Gl) ORDER: 0
+
+NAME: noop.0 ORDER: 0
+
+NAME: main().jump(4,5) ORDER: 0
+
+NAME: main().jump(5,2) ORDER: 0
+
+NAME: reg_decr(_Gc) ORDER: 0
+
+NAME: transfer(_scratch_2) ORDER: 2
+    00 -> reg_decr(_scratch_2) #again
+    01 -> transfer(_scratch_2).jump(3,1) -> zero
+    10 -> transfer(_scratch_2).jump(0,2) -> again
+    11 -> noop.0 #zero
+
+NAME: transfer(_scratch_2).jump(0,2) ORDER: 0
+
+NAME: transfer(_scratch_2).jump(3,1) ORDER: 0
+
+NAME: reg_decr(_scratch_2) ORDER: 0
+
+NAME: noop.1 ORDER: 1
+
+NAME: main().jump(8,5) ORDER: 0
+
+NAME: transfer(_copysave,_scratch_2) ORDER: 2
+    00 -> reg_decr(_copysave) #again
+    01 -> transfer(_copysave,_scratch_2).jump(4,2) -> zero
+    10 -> reg_incr(_scratch_2)
+    11 -> transfer(_copysave,_scratch_2).jump(0,2) -> again
+
+NAME: transfer(_copysave,_scratch_2).jump(0,2) ORDER: 0
+
+NAME: reg_incr(_scratch_2) ORDER: 0
+
+NAME: transfer(_copysave,_scratch_2).jump(4,2) ORDER: 0
+
+NAME: reg_decr(_copysave) ORDER: 0
+
+NAME: transfer(_scratch_2,_Gl,_copysave) ORDER: 3
+    000 -> reg_decr(_scratch_2) #again
+    001 -> transfer(_scratch_2,_Gl,_copysave).jump(5,2) -> zero
+    010 -> reg_incr(_Gl)
+    011 -> reg_incr(_copysave)
+    100 -> transfer(_scratch_2,_Gl,_copysave).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_scratch_2,_Gl,_copysave).jump(0,3) ORDER: 0
+
+NAME: reg_incr(_copysave) ORDER: 0
+
+NAME: reg_incr(_Gl) ORDER: 0
+
+NAME: transfer(_scratch_2,_Gl,_copysave).jump(5,2) ORDER: 0
+
+NAME: noop.2 ORDER: 2
+
+NAME: main().jump(29,4) ORDER: 0
+
+NAME: reg_decr(_scratch_1) ORDER: 0
+
+NAME: transfer(_Gl,_scratch_1,_scratch_2) ORDER: 3
+    000 -> reg_decr(_Gl) #again
+    001 -> transfer(_Gl,_scratch_1,_scratch_2).jump(5,2) -> zero
+    010 -> reg_incr(_scratch_1)
+    011 -> reg_incr(_scratch_2)
+    100 -> transfer(_Gl,_scratch_1,_scratch_2).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gl,_scratch_1,_scratch_2).jump(0,3) ORDER: 0
+
+NAME: reg_incr(_scratch_1) ORDER: 0
+
+NAME: transfer(_Gl,_scratch_1,_scratch_2).jump(5,2) ORDER: 0
+
+NAME: transfer(_scratch_1,_Gc) ORDER: 2
+    00 -> reg_decr(_scratch_1) #again
+    01 -> transfer(_scratch_1,_Gc).jump(4,2) -> zero
+    10 -> reg_incr(_Gc)
+    11 -> transfer(_scratch_1,_Gc).jump(0,2) -> again
+
+NAME: transfer(_scratch_1,_Gc).jump(0,2) ORDER: 0
+
+NAME: reg_incr(_Gc) ORDER: 0
+
+NAME: transfer(_scratch_1,_Gc).jump(4,2) ORDER: 0
+
+NAME: transfer(_copysave,_Gx) ORDER: 2
+    00 -> reg_decr(_copysave) #again
+    01 -> transfer(_copysave,_Gx).jump(4,2) -> zero
+    10 -> reg_incr(_Gx)
+    11 -> transfer(_copysave,_Gx).jump(0,2) -> again
+
+NAME: transfer(_copysave,_Gx).jump(0,2) ORDER: 0
+
+NAME: reg_incr(_Gx) ORDER: 0
+
+NAME: transfer(_copysave,_Gx).jump(4,2) ORDER: 0
+
+NAME: transfer(_Gx,_copysave,_scratch_1) ORDER: 3
+    000 -> reg_decr(_Gx) #again
+    001 -> transfer(_Gx,_copysave,_scratch_1).jump(5,2) -> zero
+    010 -> reg_incr(_copysave)
+    011 -> reg_incr(_scratch_1)
+    100 -> transfer(_Gx,_copysave,_scratch_1).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gx,_copysave,_scratch_1).jump(0,3) ORDER: 0
+
+NAME: transfer(_Gx,_copysave,_scratch_1).jump(5,2) ORDER: 0
+
+NAME: reg_decr(_Gx) ORDER: 0
+
+NAME: main().jump(22,4) ORDER: 0
+
+NAME: transfer(_scratch_2,_Gc,_copysave) ORDER: 3
+    000 -> reg_decr(_scratch_2) #again
+    001 -> transfer(_scratch_2,_Gc,_copysave).jump(5,2) -> zero
+    010 -> reg_incr(_Gc)
+    011 -> reg_incr(_copysave)
+    100 -> transfer(_scratch_2,_Gc,_copysave).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_scratch_2,_Gc,_copysave).jump(0,3) ORDER: 0
+
+NAME: transfer(_scratch_2,_Gc,_copysave).jump(5,2) ORDER: 0
+
+NAME: transfer(_Gc,_scratch_1,_scratch_2) ORDER: 3
+    000 -> reg_decr(_Gc) #again
+    001 -> transfer(_Gc,_scratch_1,_scratch_2).jump(5,2) -> zero
+    010 -> reg_incr(_scratch_1)
+    011 -> reg_incr(_scratch_2)
+    100 -> transfer(_Gc,_scratch_1,_scratch_2).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gc,_scratch_1,_scratch_2).jump(0,3) ORDER: 0
+
+NAME: transfer(_Gc,_scratch_1,_scratch_2).jump(5,2) ORDER: 0
+
+NAME: transfer(_scratch_1,_Gl) ORDER: 2
+    00 -> reg_decr(_scratch_1) #again
+    01 -> transfer(_scratch_1,_Gl).jump(4,2) -> zero
+    10 -> reg_incr(_Gl)
+    11 -> transfer(_scratch_1,_Gl).jump(0,2) -> again
+
+NAME: transfer(_scratch_1,_Gl).jump(0,2) ORDER: 0
+
+NAME: transfer(_scratch_1,_Gl).jump(4,2) ORDER: 0
+
+NAME: transfer(_copysave,_Gdenom) ORDER: 2
+    00 -> reg_decr(_copysave) #again
+    01 -> transfer(_copysave,_Gdenom).jump(4,2) -> zero
+    10 -> reg_incr(_Gdenom)
+    11 -> transfer(_copysave,_Gdenom).jump(0,2) -> again
+
+NAME: transfer(_copysave,_Gdenom).jump(0,2) ORDER: 0
+
+NAME: reg_incr(_Gdenom) ORDER: 0
+
+NAME: transfer(_copysave,_Gdenom).jump(4,2) ORDER: 0
+
+NAME: transfer(_Gdenom,_copysave,_scratch_1) ORDER: 3
+    000 -> reg_decr(_Gdenom) #again
+    001 -> transfer(_Gdenom,_copysave,_scratch_1).jump(5,2) -> zero
+    010 -> reg_incr(_copysave)
+    011 -> reg_incr(_scratch_1)
+    100 -> transfer(_Gdenom,_copysave,_scratch_1).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gdenom,_copysave,_scratch_1).jump(0,3) ORDER: 0
+
+NAME: transfer(_Gdenom,_copysave,_scratch_1).jump(5,2) ORDER: 0
+
+NAME: reg_decr(_Gdenom) ORDER: 0
+
+NAME: main().jump(0,3) ORDER: 0
+
+NAME: transfer(_Gdenom,_copysave,_scratch_2) ORDER: 3
+    000 -> reg_decr(_Gdenom) #again
+    001 -> transfer(_Gdenom,_copysave,_scratch_2).jump(5,2) -> zero
+    010 -> reg_incr(_copysave)
+    011 -> reg_incr(_scratch_2)
+    100 -> transfer(_Gdenom,_copysave,_scratch_2).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gdenom,_copysave,_scratch_2).jump(0,3) ORDER: 0
+
+NAME: transfer(_Gdenom,_copysave,_scratch_2).jump(5,2) ORDER: 0
+
+NAME: main().jump(164,9) ORDER: 0
+
+NAME: reg_incr(_Gi) ORDER: 0
+
+NAME: transfer(_scratch_1,_Gdenom) ORDER: 2
+    00 -> reg_decr(_scratch_1) #again
+    01 -> transfer(_scratch_1,_Gdenom).jump(4,2) -> zero
+    10 -> reg_incr(_Gdenom)
+    11 -> transfer(_scratch_1,_Gdenom).jump(0,2) -> again
+
+NAME: transfer(_scratch_1,_Gdenom).jump(0,2) ORDER: 0
+
+NAME: transfer(_scratch_1,_Gdenom).jump(4,2) ORDER: 0
+
+NAME: main().jump(252,9) ORDER: 0
+
+NAME: transfer(_copysave,_Gi) ORDER: 2
+    00 -> reg_decr(_copysave) #again
+    01 -> transfer(_copysave,_Gi).jump(4,2) -> zero
+    10 -> reg_incr(_Gi)
+    11 -> transfer(_copysave,_Gi).jump(0,2) -> again
+
+NAME: transfer(_copysave,_Gi).jump(0,2) ORDER: 0
+
+NAME: transfer(_copysave,_Gi).jump(4,2) ORDER: 0
+
+NAME: transfer(_Gi,_copysave,_scratch_1) ORDER: 3
+    000 -> reg_decr(_Gi) #again
+    001 -> transfer(_Gi,_copysave,_scratch_1).jump(5,2) -> zero
+    010 -> reg_incr(_copysave)
+    011 -> reg_incr(_scratch_1)
+    100 -> transfer(_Gi,_copysave,_scratch_1).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gi,_copysave,_scratch_1).jump(0,3) ORDER: 0
+
+NAME: transfer(_Gi,_copysave,_scratch_1).jump(5,2) ORDER: 0
+
+NAME: reg_decr(_Gi) ORDER: 0
+
+NAME: transfer(_copysave,_Gl) ORDER: 2
+    00 -> reg_decr(_copysave) #again
+    01 -> transfer(_copysave,_Gl).jump(4,2) -> zero
+    10 -> reg_incr(_Gl)
+    11 -> transfer(_copysave,_Gl).jump(0,2) -> again
+
+NAME: transfer(_copysave,_Gl).jump(0,2) ORDER: 0
+
+NAME: transfer(_copysave,_Gl).jump(4,2) ORDER: 0
+
+NAME: transfer(_Gl,_Gc,_copysave) ORDER: 3
+    000 -> reg_decr(_Gl) #again
+    001 -> transfer(_Gl,_Gc,_copysave).jump(5,2) -> zero
+    010 -> reg_incr(_Gc)
+    011 -> reg_incr(_copysave)
+    100 -> transfer(_Gl,_Gc,_copysave).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gl,_Gc,_copysave).jump(0,3) ORDER: 0
+
+NAME: transfer(_Gl,_Gc,_copysave).jump(5,2) ORDER: 0
+
+NAME: transfer(_Gc) ORDER: 2
+    00 -> reg_decr(_Gc) #again
+    01 -> transfer(_Gc).jump(3,1) -> zero
+    10 -> transfer(_Gc).jump(0,2) -> again
+    11 -> noop.0 #zero
+
+NAME: transfer(_Gc).jump(0,2) ORDER: 0
+
+NAME: transfer(_Gc).jump(3,1) ORDER: 0
+
+NAME: reg_decr(_Gk) ORDER: 0
+
+NAME: main().jump(9,5) ORDER: 0
+
+NAME: reg_decr(_Gj) ORDER: 0
+
+NAME: reg_incr(_Gj) ORDER: 0
+
+NAME: main().jump(151,7) ORDER: 0
+
+NAME: transfer(_Gx,_Gk,_copysave) ORDER: 3
+    000 -> reg_decr(_Gx) #again
+    001 -> transfer(_Gx,_Gk,_copysave).jump(5,2) -> zero
+    010 -> reg_incr(_Gk)
+    011 -> reg_incr(_copysave)
+    100 -> transfer(_Gx,_Gk,_copysave).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gx,_Gk,_copysave).jump(0,3) ORDER: 0
+
+NAME: reg_incr(_Gk) ORDER: 0
+
+NAME: transfer(_Gx,_Gk,_copysave).jump(5,2) ORDER: 0
+
+NAME: transfer(_copysave,_Glcm) ORDER: 2
+    00 -> reg_decr(_copysave) #again
+    01 -> transfer(_copysave,_Glcm).jump(4,2) -> zero
+    10 -> reg_incr(_Glcm)
+    11 -> transfer(_copysave,_Glcm).jump(0,2) -> again
+
+NAME: transfer(_copysave,_Glcm).jump(0,2) ORDER: 0
+
+NAME: reg_incr(_Glcm) ORDER: 0
+
+NAME: transfer(_copysave,_Glcm).jump(4,2) ORDER: 0
+
+NAME: transfer(_Glcm,_Gj,_copysave) ORDER: 3
+    000 -> reg_decr(_Glcm) #again
+    001 -> transfer(_Glcm,_Gj,_copysave).jump(5,2) -> zero
+    010 -> reg_incr(_Gj)
+    011 -> reg_incr(_copysave)
+    100 -> transfer(_Glcm,_Gj,_copysave).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Glcm,_Gj,_copysave).jump(0,3) ORDER: 0
+
+NAME: transfer(_Glcm,_Gj,_copysave).jump(5,2) ORDER: 0
+
+NAME: reg_decr(_Glcm) ORDER: 0
+
+NAME: transfer(_Gdenom) ORDER: 2
+    00 -> reg_decr(_Gdenom) #again
+    01 -> transfer(_Gdenom).jump(3,1) -> zero
+    10 -> transfer(_Gdenom).jump(0,2) -> again
+    11 -> noop.0 #zero
+
+NAME: transfer(_Gdenom).jump(0,2) ORDER: 0
+
+NAME: transfer(_Gdenom).jump(3,1) ORDER: 0
+
+NAME: transfer(_Gi) ORDER: 2
+    00 -> reg_decr(_Gi) #again
+    01 -> transfer(_Gi).jump(3,1) -> zero
+    10 -> transfer(_Gi).jump(0,2) -> again
+    11 -> noop.0 #zero
+
+NAME: transfer(_Gi).jump(0,2) ORDER: 0
+
+NAME: transfer(_Gi).jump(3,1) ORDER: 0
+
+NAME: main().jump(48,7) ORDER: 0
+
+NAME: transfer(_copysave,_Gc) ORDER: 2
+    00 -> reg_decr(_copysave) #again
+    01 -> transfer(_copysave,_Gc).jump(4,2) -> zero
+    10 -> reg_incr(_Gc)
+    11 -> transfer(_copysave,_Gc).jump(0,2) -> again
+
+NAME: transfer(_copysave,_Gc).jump(0,2) ORDER: 0
+
+NAME: transfer(_copysave,_Gc).jump(4,2) ORDER: 0
+
+NAME: transfer(_Gc,_Glcm,_copysave) ORDER: 3
+    000 -> reg_decr(_Gc) #again
+    001 -> transfer(_Gc,_Glcm,_copysave).jump(5,2) -> zero
+    010 -> reg_incr(_Glcm)
+    011 -> reg_incr(_copysave)
+    100 -> transfer(_Gc,_Glcm,_copysave).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Gc,_Glcm,_copysave).jump(0,3) ORDER: 0
+
+NAME: transfer(_Gc,_Glcm,_copysave).jump(5,2) ORDER: 0
+
+NAME: transfer(_scratch_1) ORDER: 2
+    00 -> reg_decr(_scratch_1) #again
+    01 -> transfer(_scratch_1).jump(3,1) -> zero
+    10 -> transfer(_scratch_1).jump(0,2) -> again
+    11 -> noop.0 #zero
+
+NAME: transfer(_scratch_1).jump(0,2) ORDER: 0
+
+NAME: transfer(_scratch_1).jump(3,1) ORDER: 0
+
+NAME: main().jump(55,5) ORDER: 0
+
+NAME: transfer(_Glcm,_copysave,_scratch_2) ORDER: 3
+    000 -> reg_decr(_Glcm) #again
+    001 -> transfer(_Glcm,_copysave,_scratch_2).jump(5,2) -> zero
+    010 -> reg_incr(_copysave)
+    011 -> reg_incr(_scratch_2)
+    100 -> transfer(_Glcm,_copysave,_scratch_2).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Glcm,_copysave,_scratch_2).jump(0,3) ORDER: 0
+
+NAME: transfer(_Glcm,_copysave,_scratch_2).jump(5,2) ORDER: 0
+
+NAME: transfer(_Glcm,_Gc,_copysave) ORDER: 3
+    000 -> reg_decr(_Glcm) #again
+    001 -> transfer(_Glcm,_Gc,_copysave).jump(5,2) -> zero
+    010 -> reg_incr(_Gc)
+    011 -> reg_incr(_copysave)
+    100 -> transfer(_Glcm,_Gc,_copysave).jump(0,3) -> again
+    101 -> noop.0 #zero
+    11  -> noop.1
+
+NAME: transfer(_Glcm,_Gc,_copysave).jump(0,3) ORDER: 0
+
+NAME: transfer(_Glcm,_Gc,_copysave).jump(5,2) ORDER: 0
+
+NAME: transfer(_Glcm) ORDER: 2
+    00 -> reg_decr(_Glcm) #again
+    01 -> transfer(_Glcm).jump(3,1) -> zero
+    10 -> transfer(_Glcm).jump(0,2) -> again
+    11 -> noop.0 #zero
+
+NAME: transfer(_Glcm).jump(0,2) ORDER: 0
+
+NAME: transfer(_Glcm).jump(3,1) ORDER: 0
+
+NAME: reg_init ORDER: 0

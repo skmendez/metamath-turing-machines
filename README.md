@@ -53,6 +53,42 @@ repository.
       pjt33's riemann improvements
     all prior machines are sorear so detailed analysis not needed
 
+# Compiler changes 2026
+
+All 2026 features are opted into per machine from the .nql file and are
+inert otherwise; committed machines reproduce byte-identically. New
+`option` flags:
+
+ * `opt_destructive` - destructive/in-place assignment lowerings:
+   augmented add and monus with register right-hand sides, `x = x*y + z`
+   and `x = x*y` consuming x as the loop counter, `x = x*x` squaring in
+   place, and construct-in-place when the destination is dead (the
+   "destructive reads" idea from the optimization list below).
+
+ * `opt_remainder_test` - lowers `a != (a / b) * b` to a direct
+   divisibility test instead of computing the quotient and product.
+
+ * `opt_dec_fusion` - fuses `if (r > 0) { r = r - 1; ... }` into the
+   decrement primitive's own zero-branch.
+
+ * `opt_copy_save` - register copies save through one dedicated register
+   instead of allocator-chosen scratch, so identical copy sites emit
+   identical transfer subroutines.
+
+ * `opt_canonical_temps` - scratch registers are allocated
+   lowest-numbered-first rather than LIFO, for the same sharing reason.
+
+New declaration `layout INDEX COUNT;` inserts COUNT one-slot no-ops before
+main-code part INDEX, purely to shift program-counter assignments so the
+BDD dispatcher can share more subtrees (the "rearrange nops to maximize
+sharing" idea below). The compiler rejects placements directly after a
+decrement, whose skip-one-slot success path padding would corrupt.
+`misc/layoutopt.py` searches for good layouts (exhaustive singles and
+pairs, then greedy and fixed-seed simulated annealing over exact builds).
+
+New builtin `builtin_halt_if_gt_destroy(a, b)` halts iff `a > b`,
+consuming both registers; `a` is zero whenever execution continues.
+
 #
 
 (Remainder of this file needs a rewrite to address current needs rather than

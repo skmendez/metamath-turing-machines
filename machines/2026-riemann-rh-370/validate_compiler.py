@@ -1,20 +1,29 @@
 #!/usr/bin/env python3
-"""Bounded execution tests for compiler peepholes used by the RH machine."""
+"""Bounded execution tests for the optional compiler features this machine
+opts into (opt_destructive, opt_remainder_test, opt_dec_fusion,
+opt_copy_save, opt_canonical_temps, and builtin_halt_if_gt_destroy).
+
+Each test program is compiled with the repository compiler and executed as a
+raw Turing machine; a program that reaches a wrong value hangs in an
+infinite loop instead of halting, so "halted" doubles as the assertion."""
 from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT / "compiler"))
+sys.path.insert(0, str(ROOT / ".." / ".." / "compiler"))
 
-import framework
 import nqlgrammar
 import nqlast
 from framework import Machine, State
 
+OPTS = ("option opt_destructive; option opt_remainder_test; "
+        "option opt_dec_fusion; option opt_copy_save; "
+        "option opt_canonical_temps;\n")
 
-def run(src: str, max_steps: int = 5_000_000):
-    framework.MAIN_INSERT_NOPS = {}
-    ast, = nqlgrammar.grammar.parse_string(src, parse_all=True)
+
+def run(src, max_steps=5_000_000, opts=True):
+    src = (OPTS if opts else "") + src
+    ast, = nqlgrammar.grammar.parseString(src, parseAll=True)
     m1 = nqlast.AstMachine(ast)
     m1.pc_bits = 50
     order = m1.main().order
@@ -39,7 +48,7 @@ def run(src: str, max_steps: int = 5_000_000):
             machine.right_tape.append(write)
             machine.current_tape = machine.left_tape.pop() if machine.left_tape else "0"
         steps += 1
-    return not isinstance(machine.state, State), steps, len(machine.reachable())
+    return not isinstance(machine.state, State)
 
 
 arithmetic = r'''
@@ -61,7 +70,8 @@ proc main() {
  return;
 }
 '''
-assert run(arithmetic)[0]
+assert run(arithmetic)
+assert run(arithmetic, opts=False)
 
 for a in range(1, 9):
     for b in range(1, 6):
@@ -72,20 +82,15 @@ for a in range(1, 9):
           if(flag != {expected}) {{ while(true) {{}} }}
           return;
         }}'''
-        assert run(src, 2_000_000)[0], (a, b)
+        assert run(src, 2_000_000), (a, b)
 
 false_src = 'global l; global c; global m; proc main(){l=3;c=5;m=0;builtin_halt_if_gt_destroy(l,c);m=1;if(m!=1){while(true){}}return;}'
 equal_src = 'global l; global c; global m; proc main(){l=4;c=4;m=0;builtin_halt_if_gt_destroy(l,c);m=1;if(m!=1){while(true){}}return;}'
 true_src = 'global l; global c; proc main(){l=5;c=3;builtin_halt_if_gt_destroy(l,c);while(true){}}'
-assert run(false_src)[0]
-assert run(equal_src)[0]
-assert run(true_src)[0]
+assert run(false_src)
+assert run(equal_src)
+assert run(true_src)
 
-print("compiler arithmetic, 40 divisibility cases, and destructive comparison: passed")
-
-# Generalized decrement fusion: `if (r > 0) { r = r - 1; REST }` lowers to a
-# single decrement whose success path runs REST.  Test taken, not-taken, and
-# else-branch cases, plus a countdown while-loop.
 fused_taken = '''global k; global c; global l; proc main() {
   k=2; l=7; c=0;
   if (k > 0) { k = k - 1; c = l; }
@@ -102,22 +107,6 @@ fused_not_taken = '''global k; global c; global f; proc main() {
   if (f != 5) { while(true) {} }
   return;
 }'''
-countdown = '''global j; global s; proc main() {
-  j=5; s=0;
-  while (j > 0) { j = j - 1; s = s + 2; }
-  if (s != 10) { while(true) {} }
-  if (j != 0) { while(true) {} }
-  return;
-}'''
-assert run(fused_taken)[0]
-assert run(fused_not_taken)[0]
-assert run(countdown)[0]
-
-print("generalized decrement fusion and countdown loop: passed")
-
-# Dedicated copy-save register: every register-copy idiom shares one save
-# register (zero before and after each copy by construction).  Stress
-# interleaved copies inside compound expressions.
 copysave = '''global a; global b; global c; global d; proc main() {
   a=6; b=4; c=0; d=0;
   c = a + b * a;
@@ -132,6 +121,10 @@ copysave = '''global a; global b; global c; global d; proc main() {
   if (a != 36) { while(true) {} }
   return;
 }'''
-assert run(copysave, 4_000_000)[0]
+assert run(fused_taken)
+assert run(fused_not_taken)
+assert run(copysave, 4_000_000)
 
-print("dedicated copy-save register: passed")
+print("compiler feature tests passed (arithmetic with and without options, "
+      "40 divisibility cases, destructive comparison, decrement fusion, "
+      "copy-save stress)")

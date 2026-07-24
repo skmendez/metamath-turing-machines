@@ -209,12 +209,25 @@ def cfg_optimizer(parts):
     return tuple(p for p in parts if p)
 
 class MachineOptions:
-    boolean = ("relative_jumps", "no_cfg_optimize", "dont_compress", "implicit_halt", "no_sort_transfers")
+    boolean = ("relative_jumps", "no_cfg_optimize", "dont_compress", "implicit_halt", "no_sort_transfers",
+               "opt_destructive", "opt_remainder_test", "opt_dec_fusion", "opt_copy_save",
+               "opt_canonical_temps")
     relative_jumps = False
     no_cfg_optimize = False
     dont_compress = False
     implicit_halt = False
     no_sort_transfers = False
+    # Optimization opt-ins (see nqlast.py); off by default so that committed
+    # machines reproduce exactly.
+    opt_destructive = False
+    opt_remainder_test = False
+    opt_dec_fusion = False
+    opt_copy_save = False
+    opt_canonical_temps = False
+    # Map from main-code part index to a count of one-slot no-ops inserted
+    # before that part, set by "layout INDEX COUNT;" declarations.  Pure
+    # program-counter padding chosen to maximize BDD sharing.
+    layout_nops = None
 
 class MachineBuilder:
     """Subclassable class of utilities for constructing Turing machines using
@@ -409,6 +422,25 @@ class MachineBuilder:
             while regcount & (regcount - 1):
                 regcount += 1
             parts = regcount * (self.reg_init(), ) + parts
+            if self.options.layout_nops:
+                # Insert declared one-slot no-ops before the indexed parts.
+                # A no-op must never directly follow a decrement instruction:
+                # a decrement skips one PC slot on success, and padding there
+                # would corrupt its branch.  Indices refer to this parts list
+                # (register inits included, labels counted as parts).
+                for index in self.options.layout_nops:
+                    assert 0 <= index <= len(parts), "layout index out of range"
+                    prev = index - 1
+                    while prev >= 0 and isinstance(parts[prev], Label):
+                        prev -= 1
+                    assert not (prev >= 0 and parts[prev].is_decrement), \
+                        "layout no-op at %d would follow a decrement" % index
+                expanded = []
+                for index, part in enumerate(parts):
+                    expanded.extend([self.noop(0)] * self.options.layout_nops.get(index, 0))
+                    expanded.append(part)
+                expanded.extend([self.noop(0)] * self.options.layout_nops.get(len(parts), 0))
+                parts = tuple(expanded)
 
         for part in parts:
             if isinstance(part, Label):

@@ -26,6 +26,7 @@ def _grammar():
     true_ = pp.Keyword('true')
     false_ = pp.Keyword('false')
     option_ = pp.Keyword('option')
+    layout_ = pp.Keyword('layout')
     lt_ = pp.Literal('<') + ~pp.Literal('=')
     gt_ = pp.Literal('>') + ~pp.Literal('=')
     le_ = pp.Literal('<=')
@@ -159,7 +160,8 @@ def _grammar():
     procdef = (proc_ - identifier_ - arglist - block).setParseAction(a(lambda l,t: nql.ProcDef(lineno=l, name=t[1], parameters=t[2], children=[t[3]])))
     globaldef = (global_ - identifier_ - semi_).setParseAction(a(lambda l,t: nql.GlobalReg(lineno=l, name=t[1])))
     optiondef = (option_ - identifier_ - semi_).setParseAction(a(lambda l,t: nql.Option(lineno=l, name=t[1])))
-    decl = procdef | globaldef | optiondef
+    layoutdef = (layout_ - integer_ - integer_ - semi_).setParseAction(a(lambda l,t: nql.LayoutNop(lineno=l, index=t[1], count=t[2])))
+    decl = procdef | globaldef | optiondef | layoutdef
 
     program = pp.ZeroOrMore(decl).setParseAction(a(lambda l,t: nql.Program(lineno=l, children=list(t))))
     program.ignore(pp.cStyleComment)

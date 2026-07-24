@@ -114,6 +114,16 @@ class Reg(NatExpr):
         return True
 
     def emit_nat_op(self, state, target, _args):
+        if state.options.opt_copy_save:
+            # A dedicated save register makes every register-copy emit the
+            # same pair of transfer subroutines for a given (source, target),
+            # letting the dispatcher share copy sites that otherwise differ
+            # only in which scratch register the allocator handed out.
+            save = state.copy_save()
+            reg = state.resolve(self.name)
+            state.emit_transfer(reg, target, save)
+            state.emit_transfer(save, reg)
+            return
         save = state.get_temp()
         reg = state.resolve(self.name)
         state.emit_transfer(reg, target, save)
@@ -342,6 +352,72 @@ class NotEqual(CompareBase):
     jump_lt = True
     jump_gt = True
 
+    @staticmethod
+    def _same_reg(a, b):
+        return isinstance(a, Reg) and isinstance(b, Reg) and a.name == b.name
+
+    def _divisibility_pattern(self):
+        # Recognize a != (a / b) * b (allowing the multiplication operands to
+        # be swapped).  This is exactly the test "b does not divide a".
+        lhs, rhs = self.children
+        if not isinstance(lhs, Reg) or not isinstance(rhs, Mul) or len(rhs.children) != 2:
+            return None
+        for div, factor in (rhs.children, tuple(reversed(rhs.children))):
+            if not isinstance(div, Div) or len(div.children) != 2:
+                continue
+            dividend, divisor = div.children
+            if self._same_reg(lhs, dividend) and self._same_reg(divisor, factor):
+                return lhs, divisor
+        return None
+
+    def emit_test(self, state, label, invert):
+        if not state.options.opt_remainder_test:
+            return super().emit_test(state, label, invert)
+        pattern = self._divisibility_pattern()
+        if pattern is None:
+            return super().emit_test(state, label, invert)
+
+        dividend_ex, divisor_ex = pattern
+        # Acquire the divisor temp first: divisor reloads then use the same
+        # scratch register as multiply addend sites, unifying the emitted
+        # transfer subroutines.
+        divisor = state.get_temp()
+        dividend = state.get_temp()
+        dividend_ex.emit_nat(state, dividend)
+
+        outer = state.gensym()
+        inner = state.gensym()
+        divisible = state.gensym()
+        nondivisible = state.gensym()
+        no_jump = state.gensym()
+
+        # Repeatedly subtract the divisor from a private dividend copy.  Test
+        # for zero only between complete subtractions, so exact multiples take
+        # the divisible branch while a partial final subtraction does not.
+        state.emit_label(outer)
+        state.emit_dec(dividend)
+        state.emit_goto(divisible)
+        state.emit_inc(dividend)
+        divisor_ex.emit_nat(state, divisor)
+
+        state.emit_label(inner)
+        state.emit_dec(divisor)
+        state.emit_goto(outer)
+        state.emit_dec(dividend)
+        state.emit_goto(nondivisible)
+        state.emit_goto(inner)
+
+        state.emit_label(divisible)
+        state.emit_goto(label if invert else no_jump)
+
+        state.emit_label(nondivisible)
+        state.emit_transfer(divisor)
+        state.emit_goto(label if not invert else no_jump)
+
+        state.emit_label(no_jump)
+        state.put_temp(dividend)
+        state.put_temp(divisor)
+
 class Not(BoolExpr):
     child_types = (BoolExpr,)
 
@@ -385,8 +461,12 @@ class VoidExpr(Node):
 
 class Assign(VoidExpr):
     child_types = (Reg, NatExpr)
-    # TODO: augmented additions and subtractions can be peepholed to remove the temporary
-    # TODO: when assigning something that doesn't use the old value, it can be constructed in place
+
+    @staticmethod
+    def _uses(node, name):
+        if isinstance(node, Reg):
+            return node.name == name
+        return any(Assign._uses(ch, name) for ch in getattr(node, 'children', ()))
 
     def emit_aug_op(self, state, lhs, rhs):
         if not (isinstance(rhs, Add) or isinstance(rhs, Monus)):
@@ -396,14 +476,126 @@ class Assign(VoidExpr):
         rhs_l, rhs_r = rhs.children
         if not (isinstance(rhs_l, Reg) and rhs_l.name == lhs.name):
             return
-        if not isinstance(rhs_r, Lit):
+        if isinstance(rhs_r, Lit):
+            for _ in range(rhs_r.value):
+                if isinstance(rhs, Monus):
+                    state.emit_dec(state.resolve(lhs.name))
+                    state.emit_noop()
+                else:
+                    state.emit_inc(state.resolve(lhs.name))
+            return True
+
+        if not state.options.opt_destructive:
             return
-        for _ in range(rhs_r.value):
-            if isinstance(rhs, Monus):
-                state.emit_dec(state.resolve(lhs.name))
-                state.emit_noop()
+        if self._uses(rhs_r, lhs.name):
+            return
+
+        out = state.resolve(lhs.name)
+        if isinstance(rhs, Add):
+            # x = x + e: add e directly into x, preserving e's inputs.
+            rhs_r.emit_nat_add(state, out)
+            return True
+
+        # x = x - e (monus): consume x directly instead of copying it to an
+        # output temporary and later copying the result back.
+        sub = state.get_temp()
+        rhs_r.emit_nat(state, sub)
+        loop = state.gensym()
+        done = state.gensym()
+        state.emit_label(loop)
+        state.emit_dec(sub)
+        state.emit_goto(done)
+        state.emit_dec(out)
+        state.emit_noop()
+        state.emit_goto(loop)
+        state.emit_label(done)
+        state.put_temp(sub)
+        return True
+
+    def emit_horner(self, state, lhs, rhs):
+        # x = x*y + z, where y and z do not depend on x.
+        if not isinstance(rhs, Add) or len(rhs.children) != 2:
+            return
+        mul, add = rhs.children
+        if not isinstance(mul, Mul) or len(mul.children) != 2:
+            return
+        a, b = mul.children
+        if isinstance(a, Reg) and a.name == lhs.name:
+            factor = b
+        elif isinstance(b, Reg) and b.name == lhs.name:
+            factor = a
+        else:
+            return
+        if self._uses(factor, lhs.name) or self._uses(add, lhs.name):
+            return
+
+        outreg = state.resolve(lhs.name)
+        result = state.get_temp()
+        again = state.gensym()
+        done = state.gensym()
+        state.emit_label(again)
+        state.emit_dec(outreg)
+        state.emit_goto(done)
+        factor.emit_nat_add(state, result)
+        state.emit_goto(again)
+        state.emit_label(done)
+        add.emit_nat_add(state, result)
+        state.emit_transfer(result, outreg)
+        state.put_temp(result)
+        return True
+
+    def emit_self_mul(self, state, lhs, rhs):
+        if not isinstance(rhs, Mul) or len(rhs.children) != 2:
+            return
+        a, b = rhs.children
+        lhs_a = isinstance(a, Reg) and a.name == lhs.name
+        lhs_b = isinstance(b, Reg) and b.name == lhs.name
+        if not (lhs_a or lhs_b):
+            return
+
+        outreg = state.resolve(lhs.name)
+        if lhs_a and lhs_b:
+            # Square in place.  Split x into a loop counter and a preserved
+            # multiplicand, leaving x clear for the result.
+            counter = state.get_temp()
+            multiplicand = state.get_temp()
+            if state.options.opt_copy_save:
+                save = state.copy_save()
             else:
-                state.emit_inc(state.resolve(lhs.name))
+                save = state.get_temp()
+            state.emit_transfer(outreg, counter, multiplicand)
+            again = state.gensym()
+            done = state.gensym()
+            state.emit_label(again)
+            state.emit_dec(counter)
+            state.emit_goto(done)
+            state.emit_transfer(multiplicand, outreg, save)
+            state.emit_transfer(save, multiplicand)
+            state.emit_goto(again)
+            state.emit_label(done)
+            state.emit_transfer(multiplicand)
+            if not state.options.opt_copy_save:
+                state.put_temp(save)
+            state.put_temp(multiplicand)
+            state.put_temp(counter)
+            return True
+
+        other = b if lhs_a else a
+        if self._uses(other, lhs.name):
+            return
+        # x = x*y: consume x as the loop counter, build the result in a temp,
+        # and move it back once.
+        result = state.get_temp()
+        again = state.gensym()
+        done = state.gensym()
+        state.emit_label(again)
+        state.emit_dec(outreg)
+        state.emit_goto(done)
+        other.emit_nat_add(state, result)
+        state.emit_goto(again)
+        state.emit_label(done)
+        state.emit_transfer(result, outreg)
+        state.put_temp(result)
         return True
 
     def emit_stmt(self, state):
@@ -413,6 +605,16 @@ class Assign(VoidExpr):
             rhs.emit_nat(state, state.resolve(lhs.name))
         elif self.emit_aug_op(state, lhs, rhs):
             pass
+        elif state.options.opt_destructive and self.emit_horner(state, lhs, rhs):
+            pass
+        elif state.options.opt_destructive and self.emit_self_mul(state, lhs, rhs):
+            pass
+        elif state.options.opt_destructive and not self._uses(rhs, lhs.name):
+            # The old destination is dead, so clear it first and construct the
+            # new value directly in place.
+            out = state.resolve(lhs.name)
+            state.emit_transfer(out)
+            rhs.emit_nat(state, out)
         else:
             temp = state.get_temp()
             rhs.emit_nat(state, temp)
@@ -440,8 +642,43 @@ class WhileLoop(VoidExpr):
 
 class IfThen(VoidExpr):
     child_types = (BoolExpr, VoidExpr, VoidExpr)
+
+    @staticmethod
+    def _starts_with_dec_one(stmt, name):
+        if not isinstance(stmt, Block) or len(stmt.children) < 1:
+            return False
+        a = stmt.children[0]
+        if not isinstance(a, Assign):
+            return False
+        lhs, rhs = a.children
+        return (isinstance(lhs, Reg) and lhs.name == name and
+                isinstance(rhs, Monus) and len(rhs.children) == 2 and
+                isinstance(rhs.children[0], Reg) and rhs.children[0].name == name and
+                isinstance(rhs.children[1], Lit) and rhs.children[1].value == 1)
+
     def emit_stmt(self, state):
         test, then_, else_ = self.children
+        # Fuse `if (r > 0) { r = r - 1; ... }`.  A decrement primitive
+        # already branches on zero and performs the decrement when
+        # successful, so restoring r for the comparison and decrementing it
+        # a second time is pure overhead.
+        if (state.options.opt_dec_fusion and
+            isinstance(test, Greater) and len(test.children) == 2 and
+            isinstance(test.children[0], Reg) and
+            isinstance(test.children[1], Lit) and test.children[1].value == 0 and
+            self._starts_with_dec_one(then_, test.children[0].name)):
+            l_else = state.gensym()
+            l_end = state.gensym()
+            state.emit_dec(state.resolve(test.children[0].name))
+            state.emit_goto(l_else)
+            for rest in then_.children[1:]:
+                rest.emit_stmt(state)
+            state.emit_goto(l_end)
+            state.emit_label(l_else)
+            else_.emit_stmt(state)
+            state.emit_label(l_end)
+            return
+
         l_else = state.gensym()
         l_then = state.gensym()
         test.emit_test(state, l_else, True)
@@ -543,6 +780,14 @@ class GlobalReg(GlobalNode):
         self.name = kwargs.pop('name')
         super().__init__(**kwargs)
 
+class LayoutNop(GlobalNode):
+    """layout INDEX COUNT; - insert COUNT one-slot no-ops before main-code
+    part INDEX, purely to improve BDD sharing.  See framework.makesub."""
+    def __init__(self, **kwargs):
+        self.index = kwargs.pop('index')
+        self.count = kwargs.pop('count')
+        super().__init__(**kwargs)
+
 class Program(Node):
     child_types = GlobalNode
     repr_suppress = Node.repr_suppress + ('by_name', 'options',)
@@ -550,12 +795,16 @@ class Program(Node):
         super().__init__(**kwargs)
         self.by_name = {node.name: node for node in self.children if isinstance(node,ProcDef)}
         self.options = MachineOptions()
+        self.options.layout_nops = {}
         for node in self.children:
             if isinstance(node,Option):
                 if node.name in MachineOptions.boolean:
                     setattr(self.options, node.name, True)
                 else:
                     raise Exception("unknown option", node.name, self.lineno)
+            elif isinstance(node,LayoutNop):
+                self.options.layout_nops[node.index] = \
+                    self.options.layout_nops.get(node.index, 0) + node.count
 
 class SubEmitter:
     """Tracks state while lowering a _SubDef to a call sequence."""
@@ -614,6 +863,26 @@ class SubEmitter:
             func = self._machine_builder.instantiate(func_name, tuple(arg.name for arg in args))
             self._output.append(func)
 
+    def emit_builtin_halt_if_gt_destroy(self, lhs, rhs):
+        """Halt iff lhs > rhs, consuming both registers on the nonhalting path.
+
+        The left register always ends zero when execution continues; the
+        right register keeps rhs - lhs - 1 when rhs > lhs."""
+        loop = self.gensym()
+        rhs_empty = self.gensym()
+        done = self.gensym()
+        self.emit_label(loop)
+        self.emit_dec(rhs)
+        self.emit_goto(rhs_empty)
+        self.emit_dec(lhs)
+        self.emit_goto(done)
+        self.emit_goto(loop)
+        self.emit_label(rhs_empty)
+        self.emit_dec(lhs)
+        self.emit_goto(done)
+        self.emit_halt()
+        self.emit_label(done)
+
     def emit_builtin_pair(self, out, in1, in2):
         t0 = self.get_temp()
         extract = self.gensym()
@@ -667,6 +936,14 @@ class SubEmitter:
         self.emit_transfer(t0, to_)
         self.put_temp(t0)
 
+    @property
+    def options(self):
+        return self._machine_builder.options
+
+    def copy_save(self):
+        """Dedicated zero-invariant save register for register-copy idioms."""
+        return self._machine_builder.register('_copysave')
+
     def resolve(self, regname):
         reg = self._register_map.get(regname) or '_G' + regname
         return self._machine_builder.register(reg) if isinstance(reg,str) else reg
@@ -677,6 +954,14 @@ class SubEmitter:
 
     def get_temp(self):
         if self._scratch_free:
+            if self.options.opt_canonical_temps:
+                # Canonical allocation: always hand out the lowest-numbered
+                # free scratch register, so identical operations at different
+                # sites emit identically-named transfer subroutines.
+                var = min(self._scratch_free, key=lambda r: r.name)
+                self._scratch_free.remove(var)
+                self._scratch_used.append(var)
+                return var
             var = self._scratch_free.pop()
         else:
             self._scratch_next += 1
