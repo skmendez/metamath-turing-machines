@@ -53,6 +53,42 @@ repository.
       pjt33's riemann improvements
     all prior machines are sorear so detailed analysis not needed
 
+# Lean formalization (partial)
+
+`lean/` is a Lean 4 project (core Lean only) with the semantics of binary
+one-tape Turing machines, the 370-state machine's transition table imported
+verbatim, and kernel-checked bounded theorems: the machine has not halted
+after 200000 steps, and the comparison-flipped variant of the same source
+(which must halt at its first check) does halt. The theorem one actually
+wants - halting iff some `n` violates the criterion - is not formalized; see
+`lean/README.md` for exactly what is and is not proved.
+
+# ZF machine: attempt to improve on the 393-state record
+
+The current record for a machine whose halting is independent of ZF is
+Andrew J. Wade's 393-state `zf2.py` in
+<https://codeberg.org/ajwade/turing_machine_explorer> (the bbchallenge wiki
+still lists his earlier 432). His framework differs from NQL: programs are
+trees of cons cells hash-consed into a decision DAG (one state per distinct
+cell) over a variable-length instruction pointer, with 69 framework states.
+Experiments here, all reproducing his 393 baseline first:
+
+ * axiom-order simulated annealing (block moves, swaps; ~1500 exact builds
+   per restart): no order below 393;
+ * exact-cost-guided outlining (greedy append/remove and annealing over
+   which common subsequences to factor): nothing below his longest-first
+   greedy; alternative outlining heuristics (most-frequent, savings-based)
+   are 2-50 states worse;
+ * eliminating the `scratch3` register with a compare-and-restore
+   subroutine: -2 framework states but +5 decision-DAG states (396 before
+   re-tuning the axiom order).
+
+His outliner was also checked to be trace-equivalent to no outlining.  The
+remaining levers are structural (the `pair`/`unpair` stack primitives
+account for the deep `continue` levels; the 9-state dispatch chain comes
+from nested outlined prefixes) or, as in every previous record, a different
+axiom formulation; neither was achieved here.
+
 # Compiler changes 2026
 
 All 2026 features are opted into per machine from the .nql file and are
