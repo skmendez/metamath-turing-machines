@@ -89,6 +89,52 @@ pairs, then greedy and fixed-seed simulated annealing over exact builds).
 New builtin `builtin_halt_if_gt_destroy(a, b)` halts iff `a > b`,
 consuming both registers; `a` is zero whenever execution continues.
 
+# 2026 results
+
+`machines/2026-riemann-rh-370` is a 370-state machine that halts iff the
+Riemann hypothesis is false, replacing the 744-state 2016 construction for
+the same criterion (see its README and PROOF.md). It was reached in steps,
+each validated and preserved in git history: 744 -> 476 (source-level
+rewrite of the harmonic recurrence and destructive compiler lowerings) ->
+419 (removal of the `n > 253` guard, proved unnecessary) -> 392 (countdown
+registers bring main under 512 PC slots, narrowing the PC to 9 bits) ->
+373 (dedicated copy register, exhaustive layout search) -> 370 (canonical
+temp allocation makes the emitted code more searchable).
+
+Recompiling the committed machines with all 2026 options enabled, without
+any source changes, gives the following state counts. These are
+measurements only - the committed artifacts are unchanged and none of
+these recompilations has been through the per-machine validation done for
+the RH machine.
+
+    machine                            committed   opts on   + layout search
+    squaresaresmall                          165       154
+    2016-goldbach-yedidia-432                431       405        404
+    2016-riemann-matiyasevich-aaronson-744   744       667        617
+    2016-riemann-pjt33-924                   924       845
+    2016-riemann-yedidia-1008               1008       936
+    2017-zf-sorear-748                       748       738        737
+    2016-zf-sorear-1919                     1919      1942
+    2016-zf-pjt33-1879                      1879      1921
+
+The destructive lowerings were developed on arithmetic-heavy main-only
+programs and regress slightly on the proof-checker machines; the layout
+search only addresses `main()`, so it does little for machines whose bulk
+is in procedure subroutines (Goldbach, ZF). Extending the layout pass into
+subroutines is the obvious next step for those. Note that the ZF numbers
+above are recompilations of the 2016/2017 sources only: the current record
+for a machine whose halting is independent of ZF is 432 states (Andrew J.
+Wade, August 2025, following Riebel's 745 and Rohan Ridenour's 643/636;
+see wiki.bbchallenge.org/wiki/Logical_independence), reached by different
+constructions and compiler work not present here.
+
+Measured negative results, for anyone tempted to repeat them: narrowing
+the RH machine's PC to 8 bits is a net loss (a PC bit is worth only ~25
+states, but reaching 256 slots requires inlining transfers, which costs
+~100 states of subroutine sharing), and hoisting repeated statements into
+procedures gains dispatch sharing but loses more to nested alignment
+padding.
+
 #
 
 (Remainder of this file needs a rewrite to address current needs rather than
