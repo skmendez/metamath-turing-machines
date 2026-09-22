@@ -83,8 +83,13 @@ Experiments here, all reproducing his 393 baseline first:
    subroutine: -2 framework states but +5 decision-DAG states (396 before
    re-tuning the axiom order).
 
-His outliner was also checked to be trace-equivalent to no outlining.  The
-remaining levers are structural (the `pair`/`unpair` stack primitives
+His outliner was also checked to be trace-equivalent to no outlining.
+
+One inspection-level improvement did land: his axiom list contains two
+duplicated clauses (`B6b`, `B8b`); removing them and re-running his own
+order hill-climb gives **392 states** (`misc/wade-zf2-dedup/`, with the
+semantic argument for why the duplicates are inert). The remaining levers
+are structural (the `pair`/`unpair` stack primitives
 account for the deep `continue` levels; the 9-state dispatch chain comes
 from nested outlined prefixes) or, as in every previous record, a different
 axiom formulation; neither was achieved here.
