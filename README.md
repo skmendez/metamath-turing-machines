@@ -55,13 +55,17 @@ repository.
 
 # Lean formalization (partial)
 
-`lean/` is a Lean 4 project (core Lean only) with the semantics of binary
-one-tape Turing machines, the 370-state machine's transition table imported
-verbatim, and kernel-checked bounded theorems: the machine has not halted
-after 200000 steps, and the comparison-flipped variant of the same source
-(which must halt at its first check) does halt. The theorem one actually
-wants - halting iff some `n` violates the criterion - is not formalized; see
-`lean/README.md` for exactly what is and is not proved.
+`lean/` is a Lean 4 project (core Lean only). Proved: the register-level
+program of the 370-state machine halts iff some `n ≥ 1` violates the
+integer form of the criterion (`RHProg.progHalts_iff`, axioms `propext` and
+`Quot.sound` only). Kernel-checked but bounded: the compiler's actual
+emitted register program agrees with the model at its first three
+outer-loop heads, and the transition table decodes to that program's state
+in exact lockstep for 40000 instructions (2 million machine steps). Not
+proved: the two unbounded refinements (table implements program; program
+implements model), stated precisely in `RH/Target.lean` as the hypotheses
+of `target_of_refinements`. See `lean/README.md` for the exact status of
+every statement.
 
 # ZF machine: attempt to improve on the 393-state record
 
